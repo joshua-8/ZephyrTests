@@ -7,6 +7,9 @@ The simple blink example, but with an overlay file so it runs on an ESP32. I use
 * overlay file for esp32 that connects pins to the esp32's "ledc" PWM system
 * I made a HBridge class for Zephyr (though it isn't made to be portable to other embedded frameworks).
 * using a PCB I designed https://github.com/RCMgames/RCM-Hardware-V4
+## [esp32_motor_ctrl](https://github.com/joshua-8/ZephyrTests/tree/main/esp32_motor_ctrl)
+* uses a control loop to control the motor speed based on feedback received from an I2C sensor
+* I made a portable version of the [byte-sized-encoder-decoder](https://github.com/rcmgames/bsed) library for the bsed device I made that reads quadrature encoders and sends the data over I2C
 
 # references
 * https://www.youtube.com/@thepullupresistor/videos
