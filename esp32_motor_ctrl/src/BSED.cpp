@@ -1,31 +1,39 @@
 #include "BSED.h"
 #include <cstdint>
+#include <stdio.h>
 #include <stdlib.h>
-#include <zephyr/drivers/i2c.h>
-#include <zephyr/sys/time_units.h>
-#include <zephyr/sys/util_macro.h>
+#include <string.h>
+#define READ_IS_BIT_SET(value, bit) ((((value) >> (bit)) & (0x1)) != 0)
 
-// TODO: MAKE READ AND WRITE FUNCTIONS GENERIC
-inline void BSED::write(uint8_t data)
+// void write(uint8_t data)
+// {
+//     i2c_write(i2c_dev, &data, 1, address);
+// }
+// int16_t read()
+// {
+//     uint8_t data;
+//     if (i2c_read(i2c_dev, &data, 1, address) == 0) {
+//         return data;
+//     } else {
+//         return -1;
+//     }
+// }
+// uint32_t time()
+// {
+//     return k_ticks_to_us_floor32(k_cycle_get_32());
+// }
+// void delayMicros(uint32_t us)
+// {
+//     k_sleep(K_USEC(us));
+// }
+
+BSED::BSED(void _write(uint8_t), int16_t _read(), uint32_t _time(), void _delayMicros(uint32_t), int16_t _encoderSlowestInterval, int16_t _encoderEnoughCounts)
 {
-    i2c_write(i2c_dev, &data, 1, address);
-}
+    write = _write;
+    read = _read;
+    time = _time;
+    delayMicros = _delayMicros;
 
-inline int16_t BSED::read()
-{
-    uint8_t data;
-    if (i2c_read(i2c_dev, &data, 1, address) == 0) {
-        return data;
-    } else {
-        return -1;
-    }
-}
-
-BSED::BSED(const struct device* _i2c_dev, uint8_t _address, int16_t _encoderSlowestInterval, int16_t _encoderEnoughCounts)
-    : i2c_dev(_i2c_dev)
-{
-
-    address = _address;
     whichEncodersMask = 255;
 
     // memset encoderCount[] all 0
@@ -89,9 +97,9 @@ void BSED::begin(bool resetEncoders)
 void BSED::run()
 {
     write(whichEncodersMask);
-    k_sleep(K_USEC(50)); // time for the board to prepare to respond
+    delayMicros(50); // time for the board to prepare to respond
     for (uint8_t i = 0; i < 8; i++) {
-        if (IS_BIT_SET(whichEncodersMask, 7 - i) == 0) {
+        if (READ_IS_BIT_SET(whichEncodersMask, 7 - i) == 0) {
             continue;
         }
         int high = -1;
@@ -107,7 +115,7 @@ void BSED::run()
                 encoderOverflows[i] += (encoderCount[i] > lastEncoderCount[i]) ? -1 : 1;
             }
             // calculate velocity
-            uint32_t mic = k_ticks_to_us_floor32(k_cycle_get_32()); // TODO: use passed function for time to make it more generic
+            uint32_t mic = time();
             int32_t hundredMicrosSinceLastRead = (mic - lastReadMicros[i]) / 100; // using a time interval of 100 microseconds (won't overflow int32)
             if (hundredMicrosSinceLastRead > 0 && (hundredMicrosSinceLastRead > (int32_t)(encoderSlowestInterval[i] * 10) || abs(encoderCount[i] - lastVelocityEncoderCount[i]) > encoderEnoughCounts[i])) {
                 lastReadMicros[i] = mic;
@@ -178,5 +186,5 @@ bool BSED::isEncoderActive(uint8_t n)
     if (n > 8 || n < 1) {
         return false;
     }
-    return IS_BIT_SET(whichEncodersMask, 7 - (n - 1));
+    return READ_IS_BIT_SET(whichEncodersMask, 7 - (n - 1));
 }

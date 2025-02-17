@@ -3,8 +3,7 @@
 #include <cstdint>
 
 class BSED {
-private:
-    const struct device* i2c_dev;
+protected:
     uint8_t address;
     uint8_t whichEncodersMask;
     int16_t encoderCount[8];
@@ -17,11 +16,13 @@ private:
     int16_t encoderEnoughCounts[8];
     bool isVelNewVal[8];
 
-    inline void write(uint8_t data);
-    inline int16_t read();
+    void (*write)(uint8_t);
+    int16_t (*read)();
+    uint32_t (*time)();
+    void (*delayMicros)(uint32_t);
 
 public:
-    BSED(const struct device* _i2c_dev, uint8_t _address = 14, int16_t _encoderSlowestInterval = 0, int16_t _encoderEnoughCounts = 0);
+    BSED(void _write(uint8_t), int16_t _read(), uint32_t _time(), void _delayMicros(uint32_t), int16_t _encoderSlowestInterval = 0, int16_t _encoderEnoughCounts = 0);
 
     void setEncoderSlowestInterval(uint8_t n, int16_t interval);
     void setEncoderEnoughCounts(uint8_t n, int16_t counts);
