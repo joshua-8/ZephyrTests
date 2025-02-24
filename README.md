@@ -17,8 +17,8 @@ The simple blink example, but with an overlay file so it runs on an ESP32. I use
 * I used a PCB I had made with an ESP32 and a HBridge https://github.com/RCMgames/RCM-Hardware-V4
 ## [esp32_motor_ctrl](https://github.com/joshua-8/ZephyrTests/tree/main/esp32_motor_ctrl)
 * uses a control loop to control the motor speed based on feedback received from an I2C sensor
-* I made a portable version of the [byte-sized-encoder-decoder](https://github.com/rcmgames/bsed) library for the bsed device I made that reads quadrature encoders and sends the data over I2C
-* I made a control loop class that uses difference equations so it could be used with controllers other than PID.
+* I made a portable version of the [library](https://github.com/rcmgames/bsed) for the device I made that reads quadrature encoders and sends the data over I2C
+* I made a control loop class that uses difference equations so it could be used with control loops other than PID.
 
 https://github.com/user-attachments/assets/348fa874-4575-4c41-a1fd-ec449704fb58
 
