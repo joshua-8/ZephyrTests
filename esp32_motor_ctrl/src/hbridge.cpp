@@ -34,6 +34,12 @@ void HBridge::setSpeed(float speed)
     if (!enabled) {
         return;
     }
+    if (speed > 1) {
+        speed = 1;
+    }
+    if (speed < -1) {
+        speed = -1;
+    }
     if (speed > 0) {
         pwm_set_pulse_dt(pin1, speed * pin1->period);
         pwm_set_pulse_dt(pin2, 0);

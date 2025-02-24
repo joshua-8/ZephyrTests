@@ -5,6 +5,7 @@
 #include <zephyr/sys/util_macro.h>
 
 #include "BSED.h"
+#include "controlLoop.h"
 #include "hbridge.h"
 
 const struct pwm_dt_spec pin1 = PWM_DT_SPEC_GET(DT_ALIAS(pin1));
@@ -38,6 +39,7 @@ int16_t read()
         return -1;
     }
 }
+
 uint32_t time()
 {
     return (uint64_t)k_cycle_get_32() * 1000000 / CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC;
@@ -81,20 +83,34 @@ int main(void)
     BSED bsed = BSED(write, read, time, delayMicros);
     bsed.begin();
 
-    while (true) {
-        // hbridge1.enable();
-        // hbridge1.setSpeed(0.7);
-        k_sleep(K_MSEC(300));
-        // hbridge1.setSpeed(-0.3);
-        // k_sleep(K_MSEC(1000));
-        // hbridge1.disable();
-        // k_sleep(K_MSEC(1000));
-        bsed.run();
+    hbridge1.enable();
 
-        for (int i = 1; i <= 8; i++) {
-            printf("Encoder %d: %d\n", i, bsed.getEncoderVelocity(i));
+    unsigned long lastTime = time();
+
+    float targetVelocity;
+
+    ControlLoop controlLoop = ControlLoop(0.001, 0.001, 0.00005, 1.0 / 100, 10);
+
+    while (true) {
+        unsigned long now = time();
+        if (now - lastTime > 10000) { // 100Hz
+
+            // for 5 seconds set targetVelocity to 2000 then for 3 seconds set targetVelocity to -1000
+            if((now%8000000) < 5000000){
+                targetVelocity = 2000;
+            } else {
+                targetVelocity = -1000;
+            }
+
+            lastTime = now;
+            bsed.run();
+            float encoder1 = bsed.getEncoderVelocity(1);
+            float error = targetVelocity - encoder1;
+            float output = 0;
+            output = controlLoop.calculate(error);
+            printf("Encoder1: %f, Error: %f, Output: %f\n", (double)encoder1, (double)error, (double)output);
+            hbridge1.setSpeed(output);
         }
-        printf("\n");
     }
 
     return 0;

@@ -19,8 +19,8 @@
 &pinctrl {
         ledc0_pinctrl: ledc0_pinctrl {
 	        pwm_group {
-		        pinmux = <LEDC_CH0_GPIO16>,
-					<LEDC_CH1_GPIO4>;
+		        pinmux = <LEDC_CH0_GPIO4>,
+					<LEDC_CH1_GPIO16>;
 			output-enable;
 		};
 	};
